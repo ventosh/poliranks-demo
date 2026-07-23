@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Wordmark } from "@/components/brand/wordmark";
 import { BrandSelector } from "@/components/brand/brand-selector";
 import { ThemeToggle } from "@/components/brand/theme-toggle";
+import { SearchCommand } from "@/components/search/search-command";
 import { cn } from "@/lib/utils";
 
 export const NAV_ITEMS = [
@@ -66,6 +67,7 @@ export function AppHeader({ ticker }: { ticker?: React.ReactNode }) {
           >
             הצטרפות
           </Link>
+          <SearchCommand />
           <BrandSelector />
           <ThemeToggle />
         </div>
