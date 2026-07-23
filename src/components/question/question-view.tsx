@@ -109,19 +109,26 @@ export function QuestionView({ q }: { q: Question }) {
         </div>
       )}
 
-      <LiveChart slug={q.slug} onScrub={setScrub} height={380} />
+      {/* chart + vote panel — the vote is the primary action (Polymarket-style) */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="order-2 lg:order-1 lg:col-span-2">
+          <LiveChart slug={q.slug} onScrub={setScrub} height={380} />
+        </div>
+        <aside className="order-1 lg:order-2">
+          <div className="rounded-xl border border-primary/40 bg-card p-4 shadow-[0_0_28px_-8px_color-mix(in_srgb,var(--primary)_45%,transparent)] lg:sticky lg:top-20">
+            <VoteWidget q={q} live={live} />
+          </div>
+        </aside>
+      </div>
 
       {/* below the chart */}
       <div className="grid gap-4 lg:grid-cols-3">
-        <div className="rounded-xl border border-border bg-card p-4 lg:col-span-1">
-          <VoteWidget q={q} live={live} />
-        </div>
-        <div className="flex flex-col gap-4 lg:col-span-2">
+        <div className="lg:col-span-2">
           <AiSummary q={q} />
-          <div className="grid gap-4 md:grid-cols-2">
-            <ComparisonCard q={q} liveValue={live.value} />
-            <ArticlesList q={q} />
-          </div>
+        </div>
+        <div className="flex flex-col gap-4">
+          <ComparisonCard q={q} liveValue={live.value} />
+          <ArticlesList q={q} />
         </div>
       </div>
     </div>

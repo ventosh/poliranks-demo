@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useSim } from "@/lib/sim/use-sim";
 import { QUESTIONS, QUESTION_BY_SLUG } from "@/lib/data/questions";
+import { TopicsNav, type TopicFilter } from "@/components/layout/topics-nav";
 import { LiveChart } from "@/components/market/live-chart";
 import { NumberTicker } from "@/components/market/number-ticker";
 import { DeltaBadge } from "@/components/market/delta-badge";
@@ -129,6 +130,7 @@ function ActiveRow({
 export function HomeView() {
   const sim = useSim();
   const [votedSlugs, setVotedSlugs] = React.useState<Set<string>>(new Set());
+  const [topic, setTopic] = React.useState<TopicFilter>("הכל");
 
   React.useEffect(() => {
     const load = () => setVotedSlugs(new Set(Object.keys(getVotes())));
@@ -149,19 +151,24 @@ export function HomeView() {
   }
 
   const snap = sim.snap;
-  const lead = QUESTION_BY_SLUG.get("giyus")!;
-  const leadLive = snap.live[lead.slug];
+  const pool =
+    topic === "הכל" ? QUESTIONS : QUESTIONS.filter((q) => q.topic === topic);
+  const poolSlugs = new Set(pool.map((q) => q.slug));
 
-  const movers = [...QUESTIONS].sort(
+  const movers = [...pool].sort(
     (a, b) =>
       Math.abs(snap.live[b.slug].delta24h) - Math.abs(snap.live[a.slug].delta24h)
   );
-  const active = [...QUESTIONS].sort(
+  const lead =
+    topic === "הכל" ? QUESTION_BY_SLUG.get("giyus")! : movers[0] ?? pool[0];
+  const leadLive = snap.live[lead.slug];
+  const active = [...pool].sort(
     (a, b) => snap.live[b.slug].participants - snap.live[a.slug].participants
   );
   const maxN = snap.live[active[0].slug].participants;
 
   const allEvents = Object.entries(snap.events)
+    .filter(([slug]) => poolSlugs.has(slug))
     .flatMap(([slug, evs]) =>
       evs.map((e) => ({
         ...e,
@@ -172,12 +179,14 @@ export function HomeView() {
     .sort((a, b) => b.t - a.t)
     .slice(0, 6);
 
-  const waiting = QUESTIONS.filter((q) => !votedSlugs.has(q.slug)).slice(0, 4);
+  const waiting = pool.filter((q) => !votedSlugs.has(q.slug)).slice(0, 4);
   const missionsDone = Math.min(votedSlugs.size, 3);
 
   return (
     <div className="flex flex-col gap-4">
       <h1 className="sr-only">PoliRanks — מה זז במדינה עכשיו</h1>
+
+      <TopicsNav selected={topic} onSelect={setTopic} />
 
       <div className="grid gap-4 lg:grid-cols-3">
         {/* lead question — the chart is the headline */}

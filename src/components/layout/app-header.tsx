@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils";
 
 export const NAV_ITEMS = [
   { href: "/", label: "הבורסה" },
+  { href: "/feed", label: "הפיד" },
+  { href: "/politicians", label: "פוליטיקאים" },
   { href: "/dashboard", label: "הדשבורד שלי" },
   { href: "/admin", label: "חדר עריכה" },
 ] as const;
@@ -38,7 +40,9 @@ export function AppHeader({ ticker }: { ticker?: React.ReactNode }) {
             const active =
               item.href === "/"
                 ? pathname === "/" || pathname.startsWith("/q/")
-                : pathname.startsWith(item.href);
+                : item.href === "/politicians"
+                  ? pathname.startsWith("/politicians") || pathname.startsWith("/p/")
+                  : pathname.startsWith(item.href);
             return (
               <Link
                 key={item.href}
