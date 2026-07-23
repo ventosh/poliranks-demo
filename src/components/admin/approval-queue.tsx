@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
 import { toast } from "sonner";
 import {
   Bot,
@@ -15,10 +15,14 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import type { SimEngine, SimSnapshot } from "@/lib/sim/engine";
 import type { AgentProposal } from "@/lib/types";
 import { formatTimeAgo } from "@/lib/format";
@@ -50,19 +54,25 @@ function ProposalRow({
   onResolve,
 }: {
   p: AgentProposal;
-  onResolve: (id: string, r: "approved" | "edited" | "rejected") => void;
+  onResolve: (
+    id: string,
+    r: "approved" | "edited" | "rejected",
+    edits?: { title: string; payload: string }
+  ) => void;
 }) {
   const [rejectOpen, setRejectOpen] = React.useState(false);
+  const [editOpen, setEditOpen] = React.useState(false);
+  const [editTitle, setEditTitle] = React.useState(p.title);
+  const [editPayload, setEditPayload] = React.useState(p.payload);
+
+  const openEditor = () => {
+    setEditTitle(p.title);
+    setEditPayload(p.payload);
+    setEditOpen(true);
+  };
 
   return (
-    <motion.li
-      layout
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, x: 60, height: 0, marginBottom: 0 }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
-      className="overflow-hidden"
-    >
+    <>
       <div className="mb-2 rounded-xl border border-border bg-card p-3.5 border-s-2 border-s-ai">
         <div className="flex flex-wrap items-center gap-2 text-[11px]">
           <span className="inline-flex items-center gap-1 rounded-full bg-ai/15 px-2 py-0.5 font-bold text-ai">
@@ -131,7 +141,7 @@ function ProposalRow({
               size="sm"
               variant="outline"
               className="h-8 gap-1"
-              onClick={() => onResolve(p.id, "edited")}
+              onClick={openEditor}
             >
               <Pencil className="size-3.5" />
               עריכה ואישור
@@ -148,6 +158,68 @@ function ProposalRow({
           </div>
         </div>
       </div>
+
+      {/* edit-then-approve dialog (PRD §2.7 R9 — the diff feeds the learning loop) */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent dir="rtl" className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-start text-base">
+              עריכה ואישור — {p.agent}
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground">
+            הגרסה הערוכה תפורסם; ה-diff בין טיוטת הסוכן לגרסה שלך נשמר ומוזרק
+            ללמידת הסוכן (few-shot).
+          </p>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor={`edit-title-${p.id}`} className="text-xs">
+                כותרת
+              </Label>
+              <Input
+                id={`edit-title-${p.id}`}
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor={`edit-payload-${p.id}`} className="text-xs">
+                תוכן
+              </Label>
+              <Textarea
+                id={`edit-payload-${p.id}`}
+                rows={4}
+                value={editPayload}
+                onChange={(e) => setEditPayload(e.target.value)}
+              />
+            </div>
+            {(editTitle !== p.title || editPayload !== p.payload) && (
+              <p className="rounded-md bg-ai/10 px-2.5 py-1.5 text-[11px] font-medium text-ai">
+                זוהו שינויים — יישמרו כ-diff של העורך
+              </p>
+            )}
+          </div>
+          <DialogFooter className="gap-2 sm:justify-start">
+            <Button
+              className="gap-1 bg-up font-bold text-[#04231a] hover:bg-up/90"
+              disabled={!editTitle.trim() || !editPayload.trim()}
+              onClick={() => {
+                setEditOpen(false);
+                onResolve(p.id, "edited", {
+                  title: editTitle.trim(),
+                  payload: editPayload.trim(),
+                });
+              }}
+            >
+              <Check className="size-3.5" />
+              אישור ופרסום הגרסה הערוכה
+            </Button>
+            <Button variant="ghost" onClick={() => setEditOpen(false)}>
+              ביטול
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
         <DialogContent dir="rtl" className="max-w-sm">
@@ -181,7 +253,7 @@ function ProposalRow({
           </div>
         </DialogContent>
       </Dialog>
-    </motion.li>
+    </>
   );
 }
 
@@ -194,8 +266,12 @@ export function ApprovalQueue({
     .filter((p) => p.status === "pending")
     .sort((a, b) => a.priority - b.priority || a.minutesAgo - b.minutesAgo);
 
-  const resolve = (id: string, r: "approved" | "edited" | "rejected") => {
-    const t = sim.engine.resolveProposal(id, r);
+  const resolve = (
+    id: string,
+    r: "approved" | "edited" | "rejected",
+    edits?: { title: string; payload: string }
+  ) => {
+    const t = sim.engine.resolveProposal(id, r, edits);
     if (t) {
       toast(t.title, {
         description: t.body,
@@ -203,8 +279,11 @@ export function ApprovalQueue({
         duration: 6000,
       });
     } else if (r !== "rejected") {
-      toast(r === "approved" ? "אושר ופורסם" : "נערך ואושר", {
-        description: "נרשם ביומן ההחלטות · ההחלטה מזינה את לולאת הלמידה",
+      toast(r === "approved" ? "אושר ופורסם" : "נערך ואושר — הגרסה שלך פורסמה", {
+        description:
+          r === "edited"
+            ? "ה-diff של העריכה נשמר ומזין את לולאת הלמידה של הסוכן"
+            : "נרשם ביומן ההחלטות · ההחלטה מזינה את לולאת הלמידה",
       });
     }
   };
@@ -223,11 +302,18 @@ export function ApprovalQueue({
 
   return (
     <ul className="flex flex-col">
-      <AnimatePresence initial={false}>
-        {pending.map((p) => (
-          <ProposalRow key={p.id} p={p} onResolve={resolve} />
-        ))}
-      </AnimatePresence>
+      {/* NOTE: no AnimatePresence here — multi-child list exits hang with the
+          current motion/React combo; resolved rows are removed instantly. */}
+      {pending.map((p) => (
+        <motion.li
+          key={p.id}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.22, ease: "easeOut" }}
+        >
+          <ProposalRow p={p} onResolve={resolve} />
+        </motion.li>
+      ))}
     </ul>
   );
 }

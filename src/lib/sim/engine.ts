@@ -196,14 +196,21 @@ export class SimEngine {
 
   /* ---------- actions ---------- */
 
-  /** Editor approves/rejects a proposal in the admin queue. */
+  /** Editor approves/rejects a proposal in the admin queue.
+   *  `edits` = the editor's revised version (kept as the published text;
+   *  the draft→published diff feeds the learning loop per PRD §2.7 R9). */
   resolveProposal(
     id: string,
-    resolution: "approved" | "edited" | "rejected"
+    resolution: "approved" | "edited" | "rejected",
+    edits?: { title: string; payload: string }
   ): StoryToast | null {
     const p = this.proposals.find((x) => x.id === id);
     if (!p || p.status !== "pending") return null;
     p.status = resolution;
+    if (edits && resolution !== "rejected") {
+      p.title = edits.title;
+      p.payload = edits.payload;
+    }
     let toast: StoryToast | null = null;
     if (resolution !== "rejected" && p.kind === "event-pin" && p.questionSlug) {
       const ev = this.injectEvent(p.questionSlug, {
