@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Award, Flame, History, Scale, Vote } from "lucide-react";
+import { Award, Flame, History, Pencil, Scale, Vote } from "lucide-react";
 import { useSim } from "@/lib/sim/use-sim";
 import { QUESTION_BY_SLUG } from "@/lib/data/questions";
 import {
@@ -220,24 +220,51 @@ export function DashboardView() {
               .sort(([, a], [, b]) => b.at - a.at)
               .map(([slug, v]) => {
                 const q = QUESTION_BY_SLUG.get(slug)!;
+                const isStance = q.type === "stance";
+                const answerLabel = isStance
+                  ? STANCE_LABEL[v.choice] ?? v.choice
+                  : `דירוג ${v.choice}/5`;
                 return (
-                  <li
-                    key={slug}
-                    className="flex items-center justify-between border-b border-border py-2 text-[13px] last:border-b-0"
-                  >
-                    <span className="truncate">{q.title}</span>
-                    <span className="shrink-0 text-[11px] text-muted-foreground">
-                      {new Date(v.at).toLocaleString("he-IL", {
-                        day: "numeric",
-                        month: "short",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
+                  <li key={slug} className="border-b border-border last:border-b-0">
+                    <Link
+                      href={`/q/${slug}`}
+                      className="group flex items-center gap-3 rounded-lg px-1 py-2.5 text-[13px] transition-colors hover:bg-accent/60"
+                      title="מעבר לשאלה לעדכון התשובה"
+                    >
+                      <span className="min-w-0 flex-1 truncate group-hover:underline">
+                        {q.title}
+                      </span>
+                      <span
+                        className={cn(
+                          "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold",
+                          isStance && v.choice === "support" && "bg-up/15 text-up",
+                          isStance && v.choice === "oppose" && "bg-down/15 text-down",
+                          isStance && v.choice === "unsure" && "bg-muted text-muted-foreground",
+                          !isStance && "bg-primary/15 text-primary"
+                        )}
+                      >
+                        {isStance ? answerLabel : <bdi className="num">{answerLabel}</bdi>}
+                      </span>
+                      <span className="hidden shrink-0 text-[11px] text-muted-foreground sm:block">
+                        {new Date(v.at).toLocaleString("he-IL", {
+                          day: "numeric",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                      <span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold text-primary opacity-0 transition-opacity group-hover:opacity-100">
+                        <Pencil className="size-3" />
+                        עדכון תשובה
+                      </span>
+                    </Link>
                   </li>
                 );
               })}
           </ul>
+          <p className="mt-2 text-[10px] text-muted-foreground">
+            לחיצה על שורה פותחת את עמוד השאלה — שם ניתן לעדכן את התשובה בכל עת.
+          </p>
         </section>
       )}
     </div>
