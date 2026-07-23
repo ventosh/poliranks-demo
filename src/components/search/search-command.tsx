@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Flag, HelpCircle, Search, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
+  Command,
   CommandDialog,
   CommandEmpty,
   CommandGroup,
@@ -57,8 +58,9 @@ export function SearchCommand() {
         title="חיפוש"
         description="חיפוש שאלות, נבחרים ואירועים"
       >
-        <CommandInput placeholder="חפש שאלה, נבחר ציבור או אירוע..." />
-        <CommandList dir="rtl">
+        <Command dir="rtl">
+          <CommandInput placeholder="חפש שאלה, נבחר ציבור או אירוע..." />
+          <CommandList>
           <CommandEmpty>לא נמצאו תוצאות</CommandEmpty>
           <CommandGroup heading="שאלות">
             {QUESTIONS.map((q) => (
@@ -114,7 +116,8 @@ export function SearchCommand() {
               );
             })}
           </CommandGroup>
-        </CommandList>
+          </CommandList>
+        </Command>
       </CommandDialog>
     </>
   );

@@ -229,7 +229,7 @@ export function HomeView() {
             המזנקים של 24 השעות
           </CardTitle>
           <div className="flex flex-col">
-            {movers.map((q, i) => (
+            {movers.slice(0, 9).map((q, i) => (
               <MoverRow key={q.slug} slug={q.slug} rank={i + 1} snap={snap} />
             ))}
           </div>

@@ -44,8 +44,11 @@ export function computeAxisEstimates(
   const out = new Map<string, AxisEstimate>();
   for (const [axis, a] of acc) {
     if (a.den === 0) continue;
+    // Shrink toward center for small samples — the estimate extremizes only
+    // as more contributing answers accumulate (PRD: confidence grows with data)
+    const shrink = a.n / (a.n + 2);
     out.set(axis, {
-      score: clamp(50 + (a.num / a.den) * 45, 5, 95),
+      score: clamp(50 + (a.num / a.den) * 45 * shrink, 5, 95),
       answered: a.n,
     });
   }
