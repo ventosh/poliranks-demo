@@ -1,6 +1,8 @@
 import * as React from "react";
 import { AppHeader } from "@/components/layout/app-header";
 import { BottomTabs } from "@/components/layout/bottom-tabs";
+import { PresenterHotkeys } from "@/components/presenter";
+import { Toaster } from "@/components/ui/sonner";
 
 export function AppShell({
   children,
@@ -16,6 +18,8 @@ export function AppShell({
         {children}
       </main>
       <BottomTabs />
+      <PresenterHotkeys />
+      <Toaster position="bottom-left" dir="rtl" />
     </div>
   );
 }
