@@ -31,10 +31,13 @@ clear them via devtools → Application → Local Storage).
 
 ## Screens
 
-- **הבורסה (home)** — ticker tape, lead live chart, biggest movers, most active, events feed, missions
+- **הבורסה (home)** — ticker tape, Polymarket-style topic chips (filter every module), lead live chart, biggest movers, most active, events feed, missions
+- **הפיד** `/feed` — the endless questions: one question at a time, answer → you-vs-public flash → auto-advance; battery questions feed the ideology axes
+- **פוליטיקאים** `/politicians` + `/p/<slug>` — ranked trust index and per-figure pages (live trust chart with event pins, trust by topic/group, statements feed, AI activity, two-figure comparison); all figures fictional
+- **חיפוש** — ⌘K / Ctrl+K command palette over questions, politicians, and events
 - **עמוד שאלה** `/q/<slug>` — odometer headline with crosshair scrub, TradingView-style live chart with event pins + popovers, vote flow with "אתה מול הציבור", AI summary (violet = AI content), segment comparison with k≥50 anonymity floor, "איך מחושב המדד?" methodology panel
 - **הצטרפות** — email + mock phone-OTP (self-typing), optional demographics ("מעדיף לא לומר" everywhere)
-- **הדשבורד שלי** — civic points/tier, agreement score, you-vs-public per question, answer history
+- **הדשבורד שלי** — civic points/tier, agreement score, **ideological map** (6 axes, dynamic estimate with your ▼ arrow vs. the public band — sharpens as you answer more), you-vs-public per question, answer history
 - **חדר עריכה** `/admin` — approval queue (approve / edit / reject with reason codes), content lifecycle + decision log, trust ops (anomalies, de-weighting, credibility), agent ops (cost/error/approval-rate, kill switches)
 
 ## Stack
