@@ -14,6 +14,7 @@ import {
   type VoteRecord,
 } from "@/lib/user-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { IdeologyAxes } from "@/components/dashboard/ideology-axes";
 import { NumberTicker } from "@/components/market/number-ticker";
 import { formatPct } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -127,6 +128,9 @@ export function DashboardView() {
           </p>
         </div>
       </div>
+
+      {/* ideological map (PRD §2.4 — dynamic estimate, never a fixed label) */}
+      <IdeologyAxes votes={votes} />
 
       {/* you vs public per question */}
       <section className="rounded-xl border border-border bg-card p-4">
