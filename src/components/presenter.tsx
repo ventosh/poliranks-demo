@@ -11,7 +11,7 @@ import { getEngine } from "@/lib/sim/engine";
 export function PresenterHotkeys() {
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== ".") return;
+      if (e.key !== "." && e.code !== "Period") return;
       const target = e.target as HTMLElement | null;
       if (target && /input|textarea|select/i.test(target.tagName)) return;
       const t = getEngine().advanceStory();

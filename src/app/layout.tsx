@@ -8,6 +8,7 @@ import {
   Roboto_Mono,
   JetBrains_Mono,
 } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { DirectionProvider } from "@/components/ui/direction";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -75,7 +76,9 @@ export default function RootLayout({
       className={`${plexHebrew.variable} ${plexMono.variable} ${heebo.variable} ${assistant.variable} ${frankRuhl.variable} ${robotoMono.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <script dangerouslySetInnerHTML={{ __html: brandInitScript }} />
+        <Script id="brand-init" strategy="beforeInteractive">
+          {brandInitScript}
+        </Script>
         <Providers>
           <DirectionProvider dir="rtl">
             <TooltipProvider>{children}</TooltipProvider>
