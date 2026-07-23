@@ -1,5 +1,6 @@
 import { QUESTIONS } from "@/lib/data/questions";
 import { EVENTS_BY_QUESTION } from "@/lib/data/events";
+import { POLITICIANS, POLITICIAN_EVENTS } from "@/lib/data/politicians";
 import { PROPOSALS, ANOMALY_FLAGS, SUSPICIOUS_USERS } from "@/lib/data/admin";
 import { generateHistory } from "@/lib/data/history";
 import { mulberry32, hashSeed, normal, clamp } from "@/lib/rng";
@@ -51,6 +52,45 @@ type EventListener = (slug: string, event: QuestionEvent) => void;
 const TICK_MS = 2000;
 const FLASH_THRESHOLD = 0.12;
 
+/** Everything the engine tracks live — questions AND politicians (trust). */
+interface TrackedSeries {
+  id: string;
+  slug: string;
+  base: number;
+  sigma: number;
+  participants: number;
+  credibility: CredibilityLevel;
+}
+
+const TRACKED_SERIES: TrackedSeries[] = [
+  ...QUESTIONS.map((q) => ({
+    id: q.id,
+    slug: q.slug,
+    base: q.base,
+    sigma: q.sigma,
+    participants: q.participants,
+    credibility: q.credibility,
+  })),
+  ...POLITICIANS.map((p) => ({
+    id: p.id,
+    slug: p.slug,
+    base: p.base,
+    sigma: p.sigma,
+    participants: p.participants,
+    credibility: p.credibility,
+  })),
+];
+
+const SERIES_BY_SLUG = new Map(TRACKED_SERIES.map((s) => [s.slug, s]));
+
+/** Events per series id (question events + politician events). */
+const SERIES_EVENTS = new Map<string, QuestionEvent[]>(EVENTS_BY_QUESTION);
+for (const e of POLITICIAN_EVENTS) {
+  const list = SERIES_EVENTS.get(e.questionId) ?? [];
+  list.push(e);
+  SERIES_EVENTS.set(e.questionId, list);
+}
+
 interface PendingImpact {
   slug: string;
   perTick: number;
@@ -90,8 +130,9 @@ export class SimEngine {
     this.anomalies = ANOMALY_FLAGS.map((a) => ({ ...a }));
     this.suspicious = SUSPICIOUS_USERS.map((u) => ({ ...u }));
 
-    for (const q of QUESTIONS) {
-      const history = generateHistory(q, this.nowSecAtBoot);
+    for (const q of TRACKED_SERIES) {
+      const seriesEvents = SERIES_EVENTS.get(q.id) ?? [];
+      const history = generateHistory(q, seriesEvents, this.nowSecAtBoot);
       this.histories.set(q.slug, history);
       const last = history[history.length - 1];
       const dayAgo = this.valueAt(history, this.nowSecAtBoot - 24 * 3600);
@@ -107,7 +148,7 @@ export class SimEngine {
       });
       this.events.set(
         q.slug,
-        (EVENTS_BY_QUESTION.get(q.id) ?? []).map((e) => ({ ...e }))
+        seriesEvents.map((e) => ({ ...e }))
       );
       this.rands.set(q.slug, mulberry32(hashSeed(`live:${seedTag}:${q.slug}`)));
     }
@@ -199,10 +240,10 @@ export class SimEngine {
     slug: string,
     partial: Omit<QuestionEvent, "id" | "questionId" | "hoursAgo">
   ): QuestionEvent {
-    const q = this.getQuestion(slug)!;
+    const series = SERIES_BY_SLUG.get(slug)!;
     const ev: QuestionEvent = {
       id: `live-${slug}-${Date.now()}`,
-      questionId: q.id,
+      questionId: series.id,
       hoursAgo: 0,
       timeSec: this.simTime,
       ...partial,
@@ -254,7 +295,7 @@ export class SimEngine {
 
   private tick() {
     this.simTime = Math.floor(Date.now() / 1000);
-    for (const q of QUESTIONS) {
+    for (const q of TRACKED_SERIES) {
       const lq = this.live.get(q.slug)!;
       const rand = this.rands.get(q.slug)!;
       const history = this.histories.get(q.slug)!;

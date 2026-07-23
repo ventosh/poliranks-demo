@@ -1,5 +1,20 @@
 export type QuestionType = "stance" | "scale" | "importance";
 
+export type AxisId =
+  | "dat-medina"
+  | "shuk-medina"
+  | "bitachon-hofesh"
+  | "smol-yamin"
+  | "prog-shamran"
+  | "merkaz-periferia";
+
+/** How a "support" vote on a question pushes the user along an axis.
+ *  Positive weight → toward pole A, negative → toward pole B. */
+export interface AxisContribution {
+  axis: AxisId;
+  weight: number;
+}
+
 export type CredibilityLevel = 1 | 2 | 3 | 4 | 5;
 
 export interface Question {
@@ -24,6 +39,10 @@ export interface Question {
   splitUnsure: number;
   /** Labels for the primary metric per question type */
   metricLabel: string;
+  /** Short punchy question used mainly by the endless feed + ideology axes */
+  battery?: boolean;
+  /** Ideological-axis contributions (PRD §2.4) */
+  axes?: AxisContribution[];
   aiSummary: AiSummary;
   followUps: FollowUp[];
   articles: Article[];
@@ -86,6 +105,42 @@ export interface HistoryPoint {
   value: number;
 }
 
+/** Fictional national figure (PRD §2.5) — never a real person. */
+export interface Politician {
+  id: string;
+  slug: string; // namespaced, e.g. "pol-arbel"
+  name: string;
+  role: string;
+  party: string;
+  topics: string[];
+  /** Trust-index base (%) the series mean-reverts to */
+  base: number;
+  sigma: number;
+  credibility: CredibilityLevel;
+  /** Number of raters */
+  participants: number;
+  volatilityLabel: "נמוכה" | "בינונית" | "גבוהה";
+  /** Trust offset (pp) from base, per PRD topic */
+  topicTrust: Record<string, number>;
+  /** Trust offset + 7-day delta per demographic group */
+  demoTrust: { group: string; offset: number; delta7d: number }[];
+  statements: PoliticianStatement[];
+  aiActivity: {
+    summary: string;
+    highlights: string[];
+    updatedMinutesAgo: number;
+  };
+}
+
+export interface PoliticianStatement {
+  id: string;
+  kind: "הצבעה" | "הצהרה" | "החלטה";
+  title: string;
+  hoursAgo: number;
+  /** Trust move (pp) recorded after the item — association wording only */
+  reaction?: number;
+}
+
 export type ProposalKind =
   | "event"
   | "question"
@@ -100,6 +155,7 @@ export interface AgentProposal {
   title: string;
   payload: string;
   questionSlug?: string;
+  politicianSlug?: string;
   confidence: number;
   model: string;
   provider: string;

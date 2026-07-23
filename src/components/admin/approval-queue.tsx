@@ -109,6 +109,15 @@ function ProposalRow({
               <ExternalLink className="size-3" />
             </Link>
           )}
+          {p.politicianSlug && (
+            <Link
+              href={`/p/${p.politicianSlug}`}
+              className="inline-flex items-center gap-1 font-semibold text-primary hover:underline"
+            >
+              לעמוד הפוליטיקאי
+              <ExternalLink className="size-3" />
+            </Link>
+          )}
           <div className="ms-auto flex gap-1.5">
             <Button
               size="sm"
