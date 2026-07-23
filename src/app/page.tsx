@@ -1,15 +1,11 @@
 import { AppShell } from "@/components/layout/app-shell";
-import { LiveChart } from "@/components/market/live-chart";
+import { HomeView } from "@/components/home/home-view";
+import { Ticker } from "@/components/market/ticker";
 
 export default function Home() {
   return (
-    <AppShell>
-      <div className="mx-auto max-w-3xl py-8">
-        <h1 className="mb-4 text-2xl font-bold font-heading">
-          בדיקת גרף חי — חוק הגיוס
-        </h1>
-        <LiveChart slug="giyus" />
-      </div>
+    <AppShell ticker={<Ticker />}>
+      <HomeView />
     </AppShell>
   );
 }
