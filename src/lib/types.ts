@@ -71,6 +71,8 @@ export interface QuestionEvent {
   source: string;
   /** Hours before "now" the event occurred */
   hoursAgo: number;
+  /** Absolute unix seconds — set for events injected live during the demo */
+  timeSec?: number;
   /** Step impact in percentage points (negative = drop) */
   impact: number;
   /** Cautious temporal-association note (never causation) */

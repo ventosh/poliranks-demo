@@ -204,6 +204,7 @@ export class SimEngine {
       id: `live-${slug}-${Date.now()}`,
       questionId: q.id,
       hoursAgo: 0,
+      timeSec: this.simTime,
       ...partial,
     };
     // Anchor to current sim time via hoursAgo=0; consumers use nowSecAtBoot
